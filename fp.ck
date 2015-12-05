@@ -1,10 +1,16 @@
 // Nathan James Tindall
-// Composition 2
+// Final Project
+// Music 220A: Scrubbing
+//
+// A couple of samples recorded on the CCRMA stage that are scrubbed over in
+// various fashions and filtered through LPFs.
 
-//dac => WvOut2 out => blackhole;
-//me.sourceDir() + "TINDALL_COMPOSITION.wav" => string _capture;
-//_capture => out.wavFilename;
 
+dac => WvOut2 out => blackhole;
+me.sourceDir() + "TINDALL_COMPOSITION.wav" => string _capture;
+_capture => out.wavFilename;
+
+/********************************** GLOBALS ***********************************/
 1 => int TRUE;
 0 => int FALSE;
 600::ms*4 => dur ONE_MEASURE; //of four four
@@ -33,36 +39,7 @@ LPF bassLPF; //global so that can be referenced out of bass
 bassLPF.freq(100);
 
 Pan2 p2;
-
-fun void rhythm(dur duration ) {
-    Shakers drops => Gain g;
-    Shakers sticks => g;
-    
-    g => JCRev r => Pan2 p => dac;
-    
-    0.2 => g.gain;
-    
-    now => time start;
-    // set the gain
-    0.95 => r.gain;
-    // set the reverb mix
-    .025 => r.mix;
-   
-    4 => drops.which; //drops
-    8 => sticks.which; //sticks
-    0 => sticks.decay;
-    // our main loop
-    while(start + duration > now )
-    {  
-        Math.random2f( -1, 1 ) => p.pan;
-        Math.random2f( 0, 128 ) => drops.noteOn;
-        
-           Math.random2f( 0, 128 ) => sticks.noteOn;
-        drops.energy(0.5);
-        sticks.energy(0.5);
-        150::ms => now; 
-    }
-}
+/*****************************************************************************/
 
 fun void reverse(SndBuf buf) {
     buf.rate() * -1 => buf.rate;   
@@ -117,7 +94,8 @@ fun void playBuf(SndBuf buf, int should_repeat, dur duration, float gain) {
     0 => buf.gain; //turn off buf
 }
 
-fun void rampFilterFreq(FilterBasic f, dur duration, float startFreq, float endFreq) {
+fun void rampFilterFreq(FilterBasic f, dur duration, 
+                                               float startFreq, float endFreq) {
     now => time startTime;
 
     100 => int numSteps;
@@ -146,6 +124,7 @@ fun void rampPan(Pan2 pan, dur duration, float start, float end) {
     }
 }
 
+/*
 fun void polychord() {
     SndBuf polychord => l2 => nrev => Gain g => p2 => dac;
     me.sourceDir() + "clips/polychord-123-100bpm.wav" => polychord.read;
@@ -156,7 +135,7 @@ fun void polychord() {
     spork ~ rampPan(p2, ONE_MEASURE*0.25, 1, -1);
     ONE_MEASURE*0.25 => now;
 }
-
+*/
 
 fun void theme() {
     SndBuf theme => LPF z => Gain g => left;
@@ -170,7 +149,6 @@ fun void theme() {
 
     g.gain(1);
     g2.gain(1);
- //   g3.gain(0.7);
 
     spork ~ rampFilterFreq(z, ONE_MEASURE * 24, 200, 400);
     spork ~ rampFilterFreq(z2, ONE_MEASURE * 24, 200, 400);
@@ -180,7 +158,7 @@ fun void theme() {
     spork ~ play8reverse4(theme, ONE_MEASURE * 23);
     spork ~ play8reverse4slow(theme2, ONE_MEASURE * 23);
     
-    ONE_MEASURE * 23 => now;
+    ONE_MEASURE * 26 => now;
 }
 
 fun void bass(dur duration) {
@@ -194,6 +172,7 @@ fun void bass(dur duration) {
     ONE_MEASURE * 24 => now;
 }
 
+/*
 LPF z2;
 fun void themeFast(dur duration) {
     SndBuf theme => z2 => PitShift p => Gain g => left;
@@ -214,10 +193,11 @@ fun void themeFast(dur duration) {
     spork ~ playBuf(theme, FALSE, duration, 1);
     spork ~ playBuf(theme2, FALSE, duration, 1);
     duration => now;
-}
+}*/
 
 //pass in negative speed for REVERSE~~å
-fun void scrub(SndBuf theme, FilterBasic filter, dur duration, float speed, float shift, float rate, int should_repeat, int left) {
+fun void scrub(SndBuf theme, FilterBasic filter, dur duration, float speed,
+                         float shift, float rate, int should_repeat, int left) {
     now => time start;
 
     filter => PitShift s => ADSR e => Gain g => nrev;
@@ -233,7 +213,8 @@ fun void scrub(SndBuf theme, FilterBasic filter, dur duration, float speed, floa
     e.keyOn(1);
 
     while (start + duration - e.releaseTime() > now) {
-        while ((start + duration - e.releaseTime() > now) && (theme.pos() < theme.samples())) {
+        while ((start + duration - e.releaseTime() > now) 
+                                           && (theme.pos() < theme.samples())) {
             
             Math.random2(0, theme.samples()) => theme.pos;
             
@@ -241,7 +222,8 @@ fun void scrub(SndBuf theme, FilterBasic filter, dur duration, float speed, floa
             ONE_MEASURE / speed => now;
 
         }
-        if ((should_repeat == TRUE) && (start + duration - e.releaseTime() > now)) {
+        if ((should_repeat == TRUE) 
+                                && (start + duration - e.releaseTime() > now)) {
             0 => theme.pos;
         }
     }
@@ -251,17 +233,10 @@ fun void scrub(SndBuf theme, FilterBasic filter, dur duration, float speed, floa
 
 }
 
-fun void intro() {
-    for (int i; i < 4; i++) { 
-        spork ~ rampFilterFreq(z2, ONE_MEASURE, 1000, 2000);
-        themeFast(1::second);
-    }
-}
-
 fun void lowC(dur duration) {
     SndBuf lowC => LPF l => Gain g => nrev;
     me.sourceDir() + "clips/lowChit.wav" => lowC.read;
-    l.freq(1000);
+    l.freq(131);
     lowC.rate(1);
     g.gain(0.5);
    
@@ -275,7 +250,6 @@ fun void lowC(dur duration) {
 spork ~lowC(ONE_MEASURE *8 + ONE_MEASURE);
 ONE_MEASURE /2 => now;
 
-nrev.mix(0.05);
 //speed shift rate
 LPF scrubLPF;
 SndBuf scrubTheme1 => scrubLPF;
@@ -284,7 +258,7 @@ me.sourceDir() + "clips/themeInF.wav" => scrubTheme1.read;
 SndBuf scrubTheme2 => scrubLPF;
 me.sourceDir() + "clips/themeInF.wav" => scrubTheme2.read;
 
-/*
+
 for (int i; i < 4; i++) {
     spork ~ rampFilterFreq(scrubLPF, ONE_MEASURE, 40, 30);
     spork ~ scrub(scrubTheme1, scrubLPF, ONE_MEASURE, 0.5, 1, 0.5, TRUE, 0);
@@ -298,71 +272,73 @@ ONE_MEASURE /2 => now;
 for (int i; i < 4; i++) {
     spork ~ rampFilterFreq(scrubLPF, ONE_MEASURE, 40, 60);
     spork ~ scrub(scrubTheme1, scrubLPF, ONE_MEASURE, 0.5, 1, 1, TRUE, 0);
-    spork ~ scrub(scrubTheme2, scrubLPF, ONE_MEASURE, 0.5, 1, 1, TRUE, 1);
+    spork ~ scrub(scrubTheme2, scrubLPF, ONE_MEASURE, 0.5, 1, -1, TRUE, 1);
     ONE_MEASURE * 2 => now;
     <<< i >>>;
 }
-*/
-//spork ~bass(ONE_MEASURE*26);
-/*
+
 for (int i; i< 2; i++) {
     spork ~lowC(ONE_MEASURE *3);
     ONE_MEASURE*2 => now;
 } 
 for (int i; i < 8; i++) {
-    nrev.mix(0.05);
     spork ~lowC(ONE_MEASURE * 2);
     spork ~ rampFilterFreq(scrubLPF, ONE_MEASURE*2, 100, 100);
     spork ~ scrub(scrubTheme1, scrubLPF, ONE_MEASURE*2, 1, 1, 2, TRUE, 0);
-    spork ~ scrub(scrubTheme2, scrubLPF, ONE_MEASURE*2, 1, 1, 2, TRUE, 1);
+    spork ~ scrub(scrubTheme2, scrubLPF, ONE_MEASURE*2, 1, 1, -2, TRUE, 1);
     ONE_MEASURE*2 => now;
     <<< i >>>;
-}*//*
-spork ~ rampFilterFreq(scrubLPF, ONE_MEASURE*8, 100, 100);
-<<< "Reverse" >>>;
-spork ~lowC(ONE_MEASURE *3);
-spork ~ scrub(scrubTheme2, scrubLPF, ONE_MEASURE*8, 0.5, 1, 2, TRUE, 1);
-scrubTheme1.gain(0.5);
-scrub(scrubTheme1, scrubLPF, ONE_MEASURE*8, 0.25, 1, -1, TRUE, 0);
-//spork ~bass(ONE_MEASURE*26);
-
-/* CLIMAX 
-scrubTheme2.gain(0.5); //woah now!
-<<< "Adjusting Gain">>>;
-spork ~ rampFilterFreq(scrubLPF, ONE_MEASURE*16, 100, 100);
-spork ~scrub(scrubTheme2, scrubLPF, ONE_MEASURE*16, 0.0625, 4, -0.5, TRUE, 0);
-spork~ bass(ONE_MEASURE *32);
-for (int i; i< 8; i++) {
-    lowC(ONE_MEASURE*2);
 }
-*/
-/* INTRODUCTION */
 
+<<< "Reversing" >>>;
+scrubTheme1.gain(0.5);
+spork ~ rampFilterFreq(scrubLPF, ONE_MEASURE*8, 100, 100);
+spork ~ lowC(ONE_MEASURE *3);
+spork ~ scrub(scrubTheme2, scrubLPF, ONE_MEASURE*8, 1, 1, -2, TRUE, 1);
+spork ~ scrub(scrubTheme1, scrubLPF, ONE_MEASURE*9, 0.25, 1, -1, TRUE, 0);
+ONE_MEASURE*8 => now;
+
+/* CLIMAX  */
+<<< "Adjusting Gain">>>;
+scrubTheme2.gain(0.5); //woah now!
+spork ~rampFilterFreq(scrubLPF, ONE_MEASURE*16, 100, 100);
+spork ~scrub(scrubTheme2, scrubLPF, ONE_MEASURE*16, 0.25, 4, -0.5, TRUE, 0);
+spork ~rampFilterFreq(bassLPF, ONE_MEASURE * 16, 100, 100);
+spork ~bass(ONE_MEASURE *16);
+for (int i; i< 4; i++) {
+    lowC(ONE_MEASURE*4);
+}
+
+<<< "Revealing theme" >>>;
 scrubTheme1.gain(0);
 scrubTheme2.gain(0.25);
-spork ~ rampFilterFreq(scrubLPF, ONE_MEASURE*16, 40, 40); //just a rumble
-spork ~scrub(scrubTheme2, scrubLPF, ONE_MEASURE*40, 0.0625, 4, -0.25, TRUE, 0);
+spork ~rampFilterFreq(scrubLPF, ONE_MEASURE*24, 40, 40); //just a rumble
+spork ~scrub(scrubTheme2, scrubLPF, ONE_MEASURE*40, 0.25, 4, -0.5, TRUE, 0);
+spork ~rampFilterFreq(bassLPF, ONE_MEASURE * 16, 100, 100);
+spork ~bass(ONE_MEASURE *16);
 spork ~theme(); //24 measures
 ONE_MEASURE * 16 => now;
+
 spork ~ bass(ONE_MEASURE *24);
-
-
 for (int i; i < 8; i++) {
     spork ~ playBuf(harmonics, FALSE, ONE_MEASURE, 0.5);
     ONE_MEASURE => now;
 }
 
- /* MORE */
-
+<<< "Outtro ">>>;
 spork ~ rampFilterFreq(bassLPF, ONE_MEASURE * 16, 100, 10000);
+spork ~ rampFilterFreq(scrubLPF, ONE_MEASURE* 16, 40, 1000);
 ONE_MEASURE *12 => now;
 
 now => time fade;
 ONE_MEASURE * 4 / 100 => dur delta;
+<<< "fade" >>>;
 while (fade + ONE_MEASURE * 4 > now) {
     mixer.gain() - mixer.gain()/100 => mixer.gain;
+    scrubTheme2.gain() - scrubTheme2.gain()/100 => scrubTheme2.gain;
     delta => now;
 }
+lowC(ONE_MEASURE * 16);
+<<<"End">>>;
 
-//1::day => now;
-//out.closeFile();
+out.closeFile();
