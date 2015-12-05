@@ -355,8 +355,14 @@ for (int i; i < 8; i++) {
  /* MORE */
 
 spork ~ rampFilterFreq(bassLPF, ONE_MEASURE * 16, 100, 10000);
-ONE_MEASURE *16 => now;
+ONE_MEASURE *12 => now;
 
+now => time fade;
+ONE_MEASURE * 4 / 100 => dur delta;
+while (fade + ONE_MEASURE * 4 > now) {
+    mixer.gain() - mixer.gain()/100 => mixer.gain;
+    delta => now;
+}
 
 //1::day => now;
 //out.closeFile();
