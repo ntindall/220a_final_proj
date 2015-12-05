@@ -338,7 +338,9 @@ while (fade + ONE_MEASURE * 4 > now) {
     scrubTheme2.gain() - scrubTheme2.gain()/100 => scrubTheme2.gain;
     delta => now;
 }
-lowC(ONE_MEASURE * 16);
+
+spork ~lowC(ONE_MEASURE * 12);
+ONE_MEASURE *12 => now;
 <<<"End">>>;
 
 out.closeFile();
